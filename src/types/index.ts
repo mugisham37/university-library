@@ -34,12 +34,13 @@ export interface AuthFormData {
 export type AuthType = "SIGN_IN" | "SIGN_UP";
 
 export interface FileUploadProps {
-  type: "image" | "document";
+  type: "image" | "document" | "video";
   accept: string;
   placeholder: string;
   folder: string;
   variant?: "light" | "dark";
   onFileChange: (url: string) => void;
+  value?: string;
 }
 
 // Auth credentials interface

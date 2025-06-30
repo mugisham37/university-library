@@ -1,212 +1,337 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { bookSchema } from "@/lib/validations";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import FileUpload from "@/components/FileUpload";
-import type { BookParams } from "@/types";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { useState } from "react";
 
-const BookForm = () => {
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
+import { bookSchema } from "@/lib/validations";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import FileUpload from "@/components/FileUpload";
+import ColorPicker from "@/components/admin/ColorPicker";
+import { createBook } from "@/lib/admin/actions/book";
+import { toast } from "@/hooks/use-toast";
+import { Book } from "@/types";
+
+interface BookFormProps extends Partial<Book> {
+  type?: "create" | "update";
+}
+
+const BookForm = ({ type = "create", ...book }: BookFormProps) => {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-  } = useForm<BookParams>({
+  const form = useForm<z.infer<typeof bookSchema>>({
     resolver: zodResolver(bookSchema),
     defaultValues: {
-      title: "",
-      author: "",
-      genre: "",
-      rating: 1,
-      totalCopies: 1,
-      coverUrl: "",
-      coverColor: "#000000",
-      description: "",
-      videoUrl: "",
-      summary: "",
+      title: book.title || "",
+      description: book.description || "",
+      author: book.author || "",
+      genre: book.genre || "",
+      rating: book.rating || 1,
+      totalCopies: book.totalCopies || 1,
+      coverUrl: book.coverUrl || "",
+      coverColor: book.coverColor || "#1c1f40",
+      videoUrl: book.videoUrl || "",
+      summary: book.description || "", // Use description as fallback for summary
     },
   });
 
-  const onSubmit = async (data: BookParams) => {
+  const onSubmit = async (values: z.infer<typeof bookSchema>) => {
     setIsSubmitting(true);
+    
     try {
-      // TODO: Implement book creation logic
-      console.log("Book data:", data);
-      // await createBook(data);
-    } catch (error) {
-      console.error("Error creating book:", error);
+      const result = await createBook(values);
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: `Book ${type === "create" ? "created" : "updated"} successfully`,
+        });
+
+        router.push(`/admin/books/${result.data.id}`);
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || `Failed to ${type} book`,
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="w-full max-w-2xl">
-      <h1 className="text-2xl font-semibold text-dark-400 mb-8">
-        Create New Book
-      </h1>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* Book Title */}
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem className="flex flex-col gap-1">
+              <FormLabel className="text-base font-normal text-dark-500">
+                Book Title
+              </FormLabel>
+              <FormControl>
+                <Input
+                  required
+                  placeholder="Enter book title"
+                  {...field}
+                  className="book-form_input"
+                  disabled={isSubmitting}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* Author */}
+        <FormField
+          control={form.control}
+          name="author"
+          render={({ field }) => (
+            <FormItem className="flex flex-col gap-1">
+              <FormLabel className="text-base font-normal text-dark-500">
+                Author
+              </FormLabel>
+              <FormControl>
+                <Input
+                  required
+                  placeholder="Enter author name"
+                  {...field}
+                  className="book-form_input"
+                  disabled={isSubmitting}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Genre */}
+        <FormField
+          control={form.control}
+          name="genre"
+          render={({ field }) => (
+            <FormItem className="flex flex-col gap-1">
+              <FormLabel className="text-base font-normal text-dark-500">
+                Genre
+              </FormLabel>
+              <FormControl>
+                <Input
+                  required
+                  placeholder="Enter book genre"
+                  {...field}
+                  className="book-form_input"
+                  disabled={isSubmitting}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Rating and Total Copies Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <Label htmlFor="title">Title</Label>
-            <Input
-              id="title"
-              {...register("title")}
-              className="book-form_input"
-              placeholder="Enter book title"
-            />
-            {errors.title && (
-              <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
+          <FormField
+            control={form.control}
+            name="rating"
+            render={({ field }) => (
+              <FormItem className="flex flex-col gap-1">
+                <FormLabel className="text-base font-normal text-dark-500">
+                  Rating (1-5)
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={5}
+                    step={0.1}
+                    placeholder="Book rating"
+                    {...field}
+                    className="book-form_input"
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
-
-          <div>
-            <Label htmlFor="author">Author</Label>
-            <Input
-              id="author"
-              {...register("author")}
-              className="book-form_input"
-              placeholder="Enter author name"
-            />
-            {errors.author && (
-              <p className="text-red-500 text-sm mt-1">{errors.author.message}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="genre">Genre</Label>
-            <Input
-              id="genre"
-              {...register("genre")}
-              className="book-form_input"
-              placeholder="Enter book genre"
-            />
-            {errors.genre && (
-              <p className="text-red-500 text-sm mt-1">{errors.genre.message}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="rating">Rating (1-5)</Label>
-            <Input
-              id="rating"
-              type="number"
-              min="1"
-              max="5"
-              {...register("rating", { valueAsNumber: true })}
-              className="book-form_input"
-              placeholder="Enter rating"
-            />
-            {errors.rating && (
-              <p className="text-red-500 text-sm mt-1">{errors.rating.message}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="totalCopies">Total Copies</Label>
-            <Input
-              id="totalCopies"
-              type="number"
-              min="1"
-              {...register("totalCopies", { valueAsNumber: true })}
-              className="book-form_input"
-              placeholder="Enter total copies"
-            />
-            {errors.totalCopies && (
-              <p className="text-red-500 text-sm mt-1">{errors.totalCopies.message}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="coverColor">Cover Color</Label>
-            <Input
-              id="coverColor"
-              type="color"
-              {...register("coverColor")}
-              className="book-form_input h-14"
-            />
-            {errors.coverColor && (
-              <p className="text-red-500 text-sm mt-1">{errors.coverColor.message}</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            {...register("description")}
-            className="book-form_input min-h-24"
-            placeholder="Enter book description"
           />
-          {errors.description && (
-            <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
-          )}
-        </div>
 
-        <div>
-          <Label htmlFor="summary">Summary</Label>
-          <Textarea
-            id="summary"
-            {...register("summary")}
-            className="book-form_input min-h-32"
-            placeholder="Enter book summary"
+          <FormField
+            control={form.control}
+            name="totalCopies"
+            render={({ field }) => (
+              <FormItem className="flex flex-col gap-1">
+                <FormLabel className="text-base font-normal text-dark-500">
+                  Total Copies
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={10000}
+                    placeholder="Number of copies"
+                    {...field}
+                    className="book-form_input"
+                    disabled={isSubmitting}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {errors.summary && (
-            <p className="text-red-500 text-sm mt-1">{errors.summary.message}</p>
-          )}
         </div>
 
-        <div>
-          <Label>Book Cover</Label>
-          <FileUpload
-            type="image"
-            accept="image/*"
-            placeholder="Upload book cover"
-            folder="books/covers"
-            onFileChange={(url) => {
-              setValue("coverUrl", url);
-            }}
-          />
-          {errors.coverUrl && (
-            <p className="text-red-500 text-sm mt-1">{errors.coverUrl.message}</p>
+        {/* Book Cover Image */}
+        <FormField
+          control={form.control}
+          name="coverUrl"
+          render={({ field }) => (
+            <FormItem className="flex flex-col gap-1">
+              <FormLabel className="text-base font-normal text-dark-500">
+                Book Cover Image
+              </FormLabel>
+              <FormControl>
+                <FileUpload
+                  type="image"
+                  accept="image/*"
+                  placeholder="Upload a book cover"
+                  folder="books/covers"
+                  variant="light"
+                  onFileChange={field.onChange}
+                  value={field.value}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
-        <div>
-          <Label>Book Video</Label>
-          <FileUpload
-            type="document"
-            accept="video/*"
-            placeholder="Upload book video"
-            folder="books/videos"
-            onFileChange={(url) => {
-              setValue("videoUrl", url);
-            }}
-          />
-          {errors.videoUrl && (
-            <p className="text-red-500 text-sm mt-1">{errors.videoUrl.message}</p>
+        {/* Primary Color */}
+        <FormField
+          control={form.control}
+          name="coverColor"
+          render={({ field }) => (
+            <FormItem className="flex flex-col gap-1">
+              <FormLabel className="text-base font-normal text-dark-500">
+                Primary Color
+              </FormLabel>
+              <FormControl>
+                <ColorPicker
+                  onPickerChange={field.onChange}
+                  value={field.value}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
-        <Button
-          type="submit"
+        {/* Book Description */}
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem className="flex flex-col gap-1">
+              <FormLabel className="text-base font-normal text-dark-500">
+                Book Description
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Enter detailed book description"
+                  {...field}
+                  rows={10}
+                  className="book-form_input"
+                  disabled={isSubmitting}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Book Trailer Video */}
+        <FormField
+          control={form.control}
+          name="videoUrl"
+          render={({ field }) => (
+            <FormItem className="flex flex-col gap-1">
+              <FormLabel className="text-base font-normal text-dark-500">
+                Book Trailer (Optional)
+              </FormLabel>
+              <FormControl>
+                <FileUpload
+                  type="video"
+                  accept="video/*"
+                  placeholder="Upload a book trailer"
+                  folder="books/videos"
+                  variant="light"
+                  onFileChange={field.onChange}
+                  value={field.value}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Book Summary */}
+        <FormField
+          control={form.control}
+          name="summary"
+          render={({ field }) => (
+            <FormItem className="flex flex-col gap-1">
+              <FormLabel className="text-base font-normal text-dark-500">
+                Book Summary
+              </FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="Enter a brief book summary"
+                  {...field}
+                  rows={5}
+                  className="book-form_input"
+                  disabled={isSubmitting}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Submit Button */}
+        <Button 
+          type="submit" 
+          className="book-form_btn text-white"
           disabled={isSubmitting}
-          className="book-form_btn"
         >
-          {isSubmitting ? "Creating..." : "Create Book"}
+          {isSubmitting 
+            ? `${type === "create" ? "Creating" : "Updating"}...` 
+            : `${type === "create" ? "Add Book to Library" : "Update Book"}`
+          }
         </Button>
       </form>
-    </div>
+    </Form>
   );
 };
 

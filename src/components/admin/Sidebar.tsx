@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
 import { adminSideBarLinks } from "@/constants";
-import type { Session } from "@/auth";
+import Link from "next/link";
+import { cn, getInitials } from "@/lib/utils";
+import { usePathname } from "next/navigation";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Session } from "next-auth";
 
 interface SidebarProps {
   session: Session;
@@ -14,61 +16,80 @@ const Sidebar = ({ session }: SidebarProps) => {
   const pathname = usePathname();
 
   return (
-    <aside className="admin-sidebar w-[264px]">
+    <div className="admin-sidebar">
       <div>
+        {/* Logo Section */}
         <div className="logo">
           <Image
             src="/icons/admin/logo.svg"
-            alt="BookWise Admin"
-            width={40}
-            height={40}
+            alt="BookWise Logo"
+            height={37}
+            width={37}
+            priority
           />
           <h1>BookWise</h1>
         </div>
 
-        <nav className="mt-10 space-y-2">
+        {/* Navigation Links */}
+        <nav className="mt-10 flex flex-col gap-5" role="navigation">
           {adminSideBarLinks.map((link) => {
-            const isActive = pathname === link.route;
-            
+            const isSelected =
+              (link.route !== "/admin" &&
+                pathname.includes(link.route) &&
+                link.route.length > 1) ||
+              pathname === link.route;
+
             return (
-              <Link
+              <Link 
+                href={link.route} 
                 key={link.route}
-                href={link.route}
-                className={`link ${
-                  isActive
-                    ? "bg-primary-admin/10 text-primary-admin"
-                    : "text-dark-300 hover:bg-light-300"
-                }`}
+                className={cn(
+                  "link",
+                  isSelected && "bg-primary-admin shadow-sm",
+                )}
               >
-                <Image
-                  src={link.img}
-                  alt={link.text}
-                  width={20}
-                  height={20}
-                />
-                <p>{link.text}</p>
+                <div className="relative size-5">
+                  <Image
+                    src={link.img}
+                    alt={`${link.text} icon`}
+                    fill
+                    className={cn(
+                      "object-contain",
+                      isSelected ? "brightness-0 invert" : ""
+                    )}
+                  />
+                </div>
+
+                <p className={cn(
+                  "text-base font-medium max-md:hidden",
+                  isSelected ? "text-white" : "text-dark"
+                )}>
+                  {link.text}
+                </p>
               </Link>
             );
           })}
         </nav>
       </div>
 
+      {/* User Profile Section */}
       <div className="user">
-        <div className="flex size-10 items-center justify-center rounded-full bg-primary-admin">
-          <span className="text-sm font-semibold text-white">
-            {session.user.fullName.charAt(0).toUpperCase()}
-          </span>
-        </div>
-        <div className="flex-1 max-md:hidden">
-          <p className="text-sm font-medium text-dark-400 line-clamp-1">
-            {session.user.fullName}
+        <Avatar>
+          <AvatarFallback className="bg-amber-100 text-amber-800 font-semibold">
+            {getInitials(session?.user?.name || "Admin")}
+          </AvatarFallback>
+        </Avatar>
+
+        <div className="flex flex-col max-md:hidden">
+          <p className="font-semibold text-dark-200 line-clamp-1">
+            {session?.user?.name || "Admin User"}
           </p>
           <p className="text-xs text-light-500 line-clamp-1">
-            {session.user.email}
+            {session?.user?.email || "admin@bookwise.com"}
           </p>
         </div>
       </div>
-    </aside>
+    </div>
   );
 };
 

@@ -12,10 +12,20 @@ const FileUpload: React.FC<FileUploadProps> = ({
   folder,
   variant = "light",
   onFileChange,
+  value,
 }) => {
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<string | null>(
+    value ? extractFileName(value) : null
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper function to extract filename from URL
+  function extractFileName(url: string): string {
+    if (!url) return "";
+    const parts = url.split("/");
+    return parts[parts.length - 1] || "Uploaded file";
+  }
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -95,7 +105,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
               {isUploading ? "Uploading..." : placeholder}
             </span>
             <span className="text-xs text-gray-500">
-              {type === "image" ? "PNG, JPG, GIF up to 10MB" : "PDF, DOC up to 10MB"}
+              {type === "image" 
+                ? "PNG, JPG, GIF up to 10MB" 
+                : type === "video" 
+                ? "MP4, MOV, AVI up to 50MB" 
+                : "PDF, DOC up to 10MB"}
             </span>
           </div>
         </Button>
