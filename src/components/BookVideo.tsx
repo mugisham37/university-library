@@ -26,7 +26,6 @@ const BookVideo = ({ videoUrl }: Props) => {
         path={videoUrl} 
         controls={true} 
         className="w-full rounded-xl"
-        loading="lazy"
       />
     </ImageKitProvider>
   );

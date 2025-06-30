@@ -3,7 +3,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/database/drizzle";
 import { users } from "@/database/schema";
-import { hash } from "bcryptjs";
+import { hash, compare } from "bcryptjs";
 import { headers } from "next/headers";
 import ratelimit from "@/lib/ratelimit";
 import { redirect } from "next/navigation";
@@ -22,8 +22,6 @@ export const signInWithCredentials = async (
   if (!success) return redirect("/too-fast");
 
   try {
-    // TODO: Implement actual authentication logic when auth module is available
-    // For now, just validate user exists and password matches
     const user = await db
       .select()
       .from(users)
@@ -31,11 +29,16 @@ export const signInWithCredentials = async (
       .limit(1);
 
     if (!user.length) {
-      return { success: false, error: "User not found" };
+      return { success: false, error: "Invalid credentials" };
     }
 
-    // TODO: Add password verification with bcrypt.compare
-    return { success: true };
+    // Verify password with bcrypt
+    const isPasswordValid = await compare(password, user[0].password);
+    if (!isPasswordValid) {
+      return { success: false, error: "Invalid credentials" };
+    }
+
+    return { success: true, user: user[0] };
   } catch (error) {
     console.log(error, "Signin error");
     return { success: false, error: "Signin error" };

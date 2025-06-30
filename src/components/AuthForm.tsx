@@ -19,12 +19,12 @@ import { Input } from "@/components/ui/input";
 import { FIELD_NAMES, FIELD_TYPES } from "@/constants";
 import FileUpload from "@/components/FileUpload";
 import { toast } from "@/hooks/use-toast";
-import { AuthType } from "@/types";
+import { AuthType, AuthResponse } from "@/types";
 
 interface AuthFormProps {
-  schema: z.ZodObject<any>;
-  defaultValues: Record<string, any>;
-  onSubmit: (data: any) => Promise<{ success: boolean; error?: string }>;
+  schema: z.ZodObject<z.ZodRawShape>;
+  defaultValues: Record<string, unknown>;
+  onSubmit: (data: Record<string, unknown>) => Promise<AuthResponse>;
   type: AuthType;
 }
 
@@ -42,7 +42,7 @@ const AuthForm: React.FC<AuthFormProps> = ({
     defaultValues,
   });
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: Record<string, unknown>) => {
     try {
       const result = await onSubmit(data);
 

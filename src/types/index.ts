@@ -23,14 +23,6 @@ export interface User {
   universityCard?: string;
 }
 
-export interface AuthFormData {
-  email: string;
-  password: string;
-  fullName?: string;
-  universityId?: string;
-  universityCard?: string;
-}
-
 export type AuthType = "SIGN_IN" | "SIGN_UP";
 
 export interface FileUploadProps {
@@ -78,4 +70,42 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   message?: string;
+}
+
+// Enhanced Auth Form Types
+export interface AuthResponse {
+  success: boolean;
+  error?: string;
+  data?: User;
+}
+
+export interface SignInFormData {
+  email: string;
+  password: string;
+}
+
+export interface SignUpFormData {
+  email: string;
+  password: string;
+  fullName: string;
+  universityId: string;
+  universityCard: string;
+}
+
+export type AuthFormData = SignInFormData | SignUpFormData;
+
+// Generic Auth Form Props
+export interface AuthFormProps<T extends Record<string, unknown>> {
+  schema: import('zod').ZodObject<import('zod').ZodRawShape>;
+  defaultValues: T;
+  onSubmit: (data: T) => Promise<AuthResponse>;
+  type: AuthType;
+}
+
+// Form Field Configuration
+export interface FormFieldConfig {
+  name: string;
+  type: string;
+  required: boolean;
+  placeholder?: string;
 }
