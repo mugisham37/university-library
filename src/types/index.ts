@@ -3,9 +3,15 @@
 export interface Book {
   id: string;
   title: string;
+  author: string;
   genre: string;
+  rating: number;
+  totalCopies: number;
+  availableCopies: number;
+  description: string;
   coverColor: string;
   coverUrl: string;
+  videoUrl?: string;
   isLoanedBook?: boolean;
 }
 
@@ -66,7 +72,7 @@ export interface BorrowBookParams {
 }
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
