@@ -35,3 +35,40 @@ export interface FileUploadProps {
   variant?: "light" | "dark";
   onFileChange: (url: string) => void;
 }
+
+// Auth credentials interface
+export interface AuthCredentials {
+  fullName: string;
+  email: string;
+  universityId: number;
+  password: string;
+  universityCard: string;
+}
+
+// Book parameters interface
+export interface BookParams {
+  title: string;
+  author: string;
+  genre: string;
+  rating: number;
+  totalCopies: number;
+  coverUrl: string;
+  coverColor: string;
+  description: string;
+  videoUrl: string;
+  summary: string;
+}
+
+// Borrow book parameters interface
+export interface BorrowBookParams {
+  userId: string;
+  bookId: string;
+}
+
+// API Response types
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
