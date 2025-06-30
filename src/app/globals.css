@@ -120,3 +120,61 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  /* Book Cover Variants */
+  .book-cover_extra_small {
+    @apply w-16 h-20;
+  }
+  
+  .book-cover_small {
+    @apply w-20 h-28;
+  }
+  
+  .book-cover_medium {
+    @apply w-24 h-32;
+  }
+  
+  .book-cover_regular {
+    @apply w-32 h-44;
+  }
+  
+  .book-cover_wide {
+    @apply w-40 h-56;
+  }
+
+  /* Book Components */
+  .book-title {
+    @apply text-sm font-semibold text-white truncate;
+  }
+  
+  .book-genre {
+    @apply text-xs text-gray-400 mt-1;
+  }
+  
+  .book-list {
+    @apply flex gap-4 overflow-x-auto pb-4 mt-6;
+  }
+  
+  .book-loaned {
+    @apply flex items-center gap-2 p-2 bg-gray-800 rounded-md mb-2;
+  }
+  
+  .book-btn {
+    @apply w-full bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  /* Form Components */
+  .form-input {
+    @apply bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 focus:border-primary focus:ring-primary;
+  }
+  
+  .form-btn {
+    @apply w-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50;
+  }
+
+  /* Utility Classes */
+  .text-light-100 {
+    @apply text-gray-300;
+  }
+}
